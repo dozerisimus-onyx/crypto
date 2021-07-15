@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -61,15 +62,27 @@ class UpdateFiatExchangeRates implements ShouldQueue, ShouldBeUnique
                 'base_uri' => implode('/', [config('api.coinBaseApi.baseUri'), 'v' . config('api.coinBaseApi.version')]) . '/'
             ]);
 
-            $response = $client->request('GET', 'exchange-rates', [
-                'query' => ['currency' => $this->BASE_CURRENCY]
-            ]);
+            try {
+                $response = $client->request('GET', 'exchange-rates', [
+                    'query' => ['currency' => $this->BASE_CURRENCY]
+                ]);
 
-            if ($response->getBody()) {
+                if ($response->getStatusCode() !== 200) {
+                    Log::critical('Update Fiat Exchange Rates Request Failed', ['statusCode' => $response->getStatusCode(), 'message' => $response->getReasonPhrase()]);
+                    $response = null;
+                }
+            } catch (GuzzleException $e) {
+                if ($e->getCode() !== 404) {
+                    Log::critical('Update Fiat Exchange Rates Request Failed', ['statusCode' => $e->getCode(), 'message' => $e->getMessage()]);
+                }
+                $response = null;
+            }
+
+            if ($response && $bodyJson = $response->getBody()) {
                 $currencies = Currency::all();
                 $base_currency_id = Currency::firstWhere('code', $this->BASE_CURRENCY)->id;
-                $content = json_decode($response->getBody()->getContents());
-                $rates = (array)$content->data->rates;
+                $contents = json_decode($bodyJson->getContents());
+                $rates = (array)$contents->data->rates;
 
                 foreach ($currencies as $currency) {
                     $quote_currency_id = Currency::firstWhere('code', $currency->code)->id;
@@ -84,7 +97,7 @@ class UpdateFiatExchangeRates implements ShouldQueue, ShouldBeUnique
                 }
             }
         } catch (Exception $e) {
-            Log::critical('Update Fiat Exchange Rate Failed', ['message' => $e->getMessage()]);
+            Log::critical('Update Fiat Exchange Rates Failed', ['message' => $e->getMessage()]);
         }
     }
 }
