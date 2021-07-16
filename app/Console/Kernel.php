@@ -3,7 +3,7 @@
 namespace App\Console;
 
 use App\Jobs\UpdateFiatExchangeRates;
-use App\Jobs\CheckIsCoinbaseDepositsCommitted;
+use App\Jobs\CheckIsCoinbaseTransactionsConfirmed;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
@@ -29,7 +29,7 @@ class Kernel extends ConsoleKernel
         $schedule->job(new UpdateFiatExchangeRates())
             ->everyFiveMinutes()
             ->withoutOverlapping();
-        $schedule->job(new CheckIsCoinbaseDepositsCommitted())
+        $schedule->job(new CheckIsCoinbaseTransactionsConfirmed())
             ->everyFiveMinutes()
             ->withoutOverlapping();
     }
