@@ -56,7 +56,7 @@ class CheckIsCoinbaseTransactionsConfirmed implements ShouldQueue, ShouldBeUniqu
                 'CB-VERSION' => config('api.coinBaseApi.CB_VERSION'),
             ];
 
-            Deposit::chunkById(200, function ($deposits) use($client, $headers) {
+            Deposit::whereNull('confirmed_at')->chunkById(200, function ($deposits) use($client, $headers) {
                 $deposits->each(function ($deposit, $key) use($client, $headers){
                     $accountId = $deposit->account_id;
                     $transactionId = $deposit->cb_id;
