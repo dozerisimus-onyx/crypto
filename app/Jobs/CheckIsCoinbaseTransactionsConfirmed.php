@@ -56,7 +56,7 @@ class CheckIsCoinbaseTransactionsConfirmed implements ShouldQueue, ShouldBeUniqu
                 'CB-VERSION' => config('api.coinBaseApi.CB_VERSION'),
             ];
 
-            Deposit::chunkById(200, function ($deposits) use($client, $headers) {
+            Deposit::whereNull('confirmed_at')->chunkById(200, function ($deposits) use($client, $headers) {
                 $deposits->each(function ($deposit, $key) use($client, $headers){
                     $accountId = $deposit->account_id;
                     $transactionId = $deposit->cb_id;
@@ -80,11 +80,17 @@ class CheckIsCoinbaseTransactionsConfirmed implements ShouldQueue, ShouldBeUniqu
                     try {
                         if ($response && $bodyJson = $response->getBody()) {
                             $contents = json_decode($bodyJson->getContents());
-                            $actualDepositData = $contents->data;
+                            $actualTransactionData = $contents->data;
                             if (
-                                isset($actualDepositData->network) &&
-                                isset($actualDepositData->network->status) &&
-                                $actualDepositData->network->status === 'confirmed'
+                                (
+                                    isset($actualTransactionData->network) &&
+                                    isset($actualTransactionData->network->status) &&
+                                    $actualTransactionData->network->status === 'confirmed'
+                                ) ||
+                                (
+                                    isset($actualTransactionData->status) &&
+                                    $actualTransactionData->status === 'completed'
+                                )
                             ) {
                                 //
                                 //Do something
