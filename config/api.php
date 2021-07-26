@@ -33,13 +33,12 @@ return [
         'version' => env('BCH_CHAIN_API_VERSION', '3'),
     ],
 
-    'rest_cryptoapis' => [
-        'baseUri' => 'https://rest.cryptoapis.io',
-        'version' => env('REST_CRYPTOAPIS_API_VERSION', '2'),
-        'key' => env('REST_CRYPTOAPIS_API_KEY'),
-    ],
-
     'tzstats' => [
         'baseUri' => 'https://api.tzstats.com',
+    ],
+
+    'xrpscan' => [
+        'baseUri' => 'https://api.xrpscan.com/api',
+        'version' => env('XRPSCAN_API_VERSION', '1'),
     ],
 ];

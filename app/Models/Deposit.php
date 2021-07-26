@@ -17,6 +17,7 @@ class Deposit extends Model
     protected $fillable = [
         'cb_id',
         'account_id',
+        'block_number',
         'confirmed_at',
         'created_at',
         'updated_at'

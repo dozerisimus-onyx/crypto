@@ -20,7 +20,7 @@ Route::get('/', function () {
         [
             'chain' => 'ripple',
             'code' => 'xrp',
-            'hash' => 'A2B890C8C0ABBC6072AE294735800A0B242EF007D193C2CA01A1C352C14D4CCA',
+            'hash' => '1F6CD0FFEE2012945E466C94963E0B77858AB4963938EB552BBF0A21CB9E92F0',
             'blockNumber' => null
         ],
         [
@@ -71,12 +71,12 @@ Route::get('/', function () {
             'hash' => '0xd44200f88817e9dbdfa8bde093f5a2bb508a9c08c4b74a6dc6df596e58277c21',
             'blockNumber' => null
         ],
-//        [
-//            'chain' => 'ethereum',
-//            'code' => 'eos',
-//            'hash' => '43c3e8c5652d1a7ff8d3459d21060a920f60ce89d0df61e56325c23ede8e3154',
-//            'blockNumber' => null
-//        ],
+        [
+            'chain' => 'ethereum',
+            'code' => 'eos',
+            'hash' => '0xe0dbdd508f38eca19837b380c40b72188369537fad596c2d12ef40f18732b166',
+            'blockNumber' => null
+        ],
         [
             'chain' => 'ethereum',
             'code' => 'comp',
@@ -116,11 +116,15 @@ Route::get('/', function () {
     ];
 
     echo '<pre>';
+    $start_time = microtime(true);
     foreach ($transactions as $transaction){
         $exploreService = new TransactionExplorerService($transaction['chain'], $transaction['hash'], $transaction['blockNumber']);
-        $confirmationCount = $exploreService->getConfirmationCount() ?? 'ERROR';
-        echo $transaction['code'] . ' (' . $transaction['chain'] . ')  confirmations:' . $confirmationCount . '  ' . $transaction['hash'] . PHP_EOL;
+        $confirmationCount = $exploreService->getConfirmationCount();
+        echo $transaction['code'] . ' (' . $transaction['chain'] . ')  confirmations:' . $confirmationCount . '  ' . $transaction['hash'] . ' BLOCK : ' . $exploreService->getBlockNumber() . PHP_EOL;
     }
+    $end_time = microtime(true);
+    $execution_time = ($end_time - $start_time);
+    echo "It takes ".$execution_time." seconds to execute the script";
     echo '</pre>';
 
     return view('welcome');

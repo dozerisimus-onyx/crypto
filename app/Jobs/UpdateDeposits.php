@@ -11,6 +11,8 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 use App\Models\Deposit;
 use App\Services\Coinbase;
+use App\Services\TransactionExplorerService;
+
 class UpdateDeposits implements ShouldQueue, ShouldBeUnique
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
@@ -44,18 +46,34 @@ class UpdateDeposits implements ShouldQueue, ShouldBeUnique
                             throw new Exception('Wrong response!');
                         }
                         if ($response['status'] === 'completed') {
-                            // Confirm deposit
-                            $deposit->update(['confirmed_at' => now()]);
-                            // Confirm transaction
-                            $deposit->transaction->update([
-                                'confirmed_at' => now(),
-                                'completed_at' => now(),
-                            ]);
-                            // Update balance
-                            $deposit->account->updateBalance();
-                            // Mark user
-                            if (! $deposit->owner->has_deposit) {
-                                $deposit->owner->update(['has_deposit' => true]);
+
+                            $isConfirmationReceived = true;
+
+                            if(TransactionExplorerService::checkIsSupportedCurrency($deposit->account->currency->code)){
+                                $exploreTransactionService = new TransactionExplorerService($deposit->account->currency->chain, $deposit->hash, $deposit->block_number);
+                                $currentTransactionConfirmations = $exploreTransactionService->getConfirmationCount() ?? 0;
+
+                                if($deposit->block_number = $exploreTransactionService->getBlockNumber()){
+                                    $deposit->save();
+                                }
+
+                                $isConfirmationReceived = $currentTransactionConfirmations >= $deposit->confirmations;
+                            }
+
+                            if($isConfirmationReceived){
+                                // Confirm deposit
+                                $deposit->update(['confirmed_at' => now()]);
+                                // Confirm transaction
+                                $deposit->transaction->update([
+                                    'confirmed_at' => now(),
+                                    'completed_at' => now(),
+                                ]);
+                                // Update balance
+                                $deposit->account->updateBalance();
+                                // Mark user
+                                if (! $deposit->owner->has_deposit) {
+                                    $deposit->owner->update(['has_deposit' => true]);
+                                }
                             }
                         }
                     } catch (Throwable $e) {
