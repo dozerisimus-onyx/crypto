@@ -29,6 +29,8 @@ class TransactionExplorerService
         'zec',
         'grt',
         'yfi',
+        'ada',
+        'doge',
     ];
 
     /**
@@ -110,6 +112,7 @@ class TransactionExplorerService
                 case 'litecoin':
                 case 'bitcoin-cash':
                 case 'tezos':
+                case 'dogecoin':
                     return self::getConfirmationCountByHash();
                 default:
                     Log::critical('TransactionExplorerService Error', ['message' => 'Unsupported Chain : "' . $this->chain . '"']);
@@ -146,6 +149,8 @@ class TransactionExplorerService
                     return self::getConfirmationCountByHashForBitcoinCash($this->hash);
                 case 'tezos':
                     return self::getConfirmationCountByHashForTezos($this->hash);
+                case 'dogecoin':
+                    return self::getConfirmationCountByHashForDogecoin($this->hash);
                 default:
                     Log::critical('TransactionExplorerService Error', ['message' => 'Unsupported Chain : "' . $this->chain . '"']);
             }
@@ -413,7 +418,7 @@ class TransactionExplorerService
                 ]);
 
             } catch (GuzzleException $exception) {
-                Log::critical('TransactionExplorerService Ethereum Explore Error', ['statusCode' => $exception->getCode(), 'message' => $exception->getMessage()]);
+                Log::critical('TransactionExplorerService Zcash Explore Error', ['statusCode' => $exception->getCode(), 'message' => $exception->getMessage()]);
                 $response = NULL;
             }
 
@@ -423,7 +428,7 @@ class TransactionExplorerService
                 return self::convertHexToDecimal($content->blockHeight);
             }
         } catch (Exception $exception) {
-            Log::critical('TransactionExplorerService Ethereum Explore Error', ['statusCode' => $exception->getCode(), 'message' => $exception->getMessage()]);
+            Log::critical('TransactionExplorerService Zcash Explore Error', ['statusCode' => $exception->getCode(), 'message' => $exception->getMessage()]);
         }
 
         return FALSE;
@@ -449,7 +454,7 @@ class TransactionExplorerService
                 ]);
 
             } catch (GuzzleException $exception) {
-                Log::critical('TransactionExplorerService Ethereum Explore Error', ['statusCode' => $exception->getCode(), 'message' => $exception->getMessage()]);
+                Log::critical('TransactionExplorerService Ripple Explore Error', ['statusCode' => $exception->getCode(), 'message' => $exception->getMessage()]);
                 $response = NULL;
             }
 
@@ -459,7 +464,7 @@ class TransactionExplorerService
                 return self::convertHexToDecimal($content->ledger_index);
             }
         } catch (Exception $exception) {
-            Log::critical('TransactionExplorerService Ethereum Explore Error', ['statusCode' => $exception->getCode(), 'message' => $exception->getMessage()]);
+            Log::critical('TransactionExplorerService Ripple Explore Error', ['statusCode' => $exception->getCode(), 'message' => $exception->getMessage()]);
         }
 
         return FALSE;
@@ -481,7 +486,7 @@ class TransactionExplorerService
                 $response = $client->request('GET', implode('/', ['rawtx', $hash]));
 
             } catch (GuzzleException $exception) {
-                Log::critical('TransactionExplorerService Ethereum Explore Error', ['statusCode' => $exception->getCode(), 'message' => $exception->getMessage()]);
+                Log::critical('TransactionExplorerService Bitcoin Explore Error', ['statusCode' => $exception->getCode(), 'message' => $exception->getMessage()]);
                 $response = NULL;
             }
 
@@ -491,7 +496,7 @@ class TransactionExplorerService
                 return self::convertHexToDecimal($content->block_height);
             }
         } catch (Exception $exception) {
-            Log::critical('TransactionExplorerService Ethereum Explore Error', ['statusCode' => $exception->getCode(), 'message' => $exception->getMessage()]);
+            Log::critical('TransactionExplorerService Bitcoin Explore Error', ['statusCode' => $exception->getCode(), 'message' => $exception->getMessage()]);
         }
 
         return FALSE;
@@ -513,7 +518,7 @@ class TransactionExplorerService
                 $response = $client->request('GET', implode('/', ['v' . config('api.blockcypher.version'), 'ltc', 'main', 'txs', $hash]));
 
             } catch (GuzzleException $exception) {
-                Log::critical('TransactionExplorerService Ethereum Explore Error', ['statusCode' => $exception->getCode(), 'message' => $exception->getMessage()]);
+                Log::critical('TransactionExplorerService Litecoin Explore Error', ['statusCode' => $exception->getCode(), 'message' => $exception->getMessage()]);
                 $response = NULL;
             }
 
@@ -523,7 +528,7 @@ class TransactionExplorerService
                 return self::convertHexToDecimal($content->confirmations);
             }
         } catch (Exception $exception) {
-            Log::critical('TransactionExplorerService Ethereum Explore Error', ['statusCode' => $exception->getCode(), 'message' => $exception->getMessage()]);
+            Log::critical('TransactionExplorerService Litecoin Explore Error', ['statusCode' => $exception->getCode(), 'message' => $exception->getMessage()]);
         }
 
         return FALSE;
@@ -545,7 +550,7 @@ class TransactionExplorerService
                 $response = $client->request('GET', implode('/', ['v' . config('api.bch_chain.version'), 'tx', $hash]));
 
             } catch (GuzzleException $exception) {
-                Log::critical('TransactionExplorerService Ethereum Explore Error', ['statusCode' => $exception->getCode(), 'message' => $exception->getMessage()]);
+                Log::critical('TransactionExplorerService Bitcoin-Cash Explore Error', ['statusCode' => $exception->getCode(), 'message' => $exception->getMessage()]);
                 $response = NULL;
             }
 
@@ -555,7 +560,7 @@ class TransactionExplorerService
                 return self::convertHexToDecimal($content->data->confirmations);
             }
         } catch (Exception $exception) {
-            Log::critical('TransactionExplorerService Ethereum Explore Error', ['statusCode' => $exception->getCode(), 'message' => $exception->getMessage()]);
+            Log::critical('TransactionExplorerService Bitcoin-Cash Explore Error', ['statusCode' => $exception->getCode(), 'message' => $exception->getMessage()]);
         }
 
         return FALSE;
@@ -576,7 +581,7 @@ class TransactionExplorerService
 
                 $response = $client->request('GET', implode('/', ['explorer', 'op', $hash]));
             } catch (GuzzleException $exception) {
-                Log::critical('TransactionExplorerService Ethereum Explore Error', ['statusCode' => $exception->getCode(), 'message' => $exception->getMessage()]);
+                Log::critical('TransactionExplorerService Tezos Explore Error', ['statusCode' => $exception->getCode(), 'message' => $exception->getMessage()]);
                 $response = NULL;
             }
 
@@ -586,7 +591,38 @@ class TransactionExplorerService
                 return self::convertHexToDecimal($content[0]->confirmations);
             }
         } catch (Exception $exception) {
-            Log::critical('TransactionExplorerService Ethereum Explore Error', ['statusCode' => $exception->getCode(), 'message' => $exception->getMessage()]);
+            Log::critical('TransactionExplorerService Tezos Explore Error', ['statusCode' => $exception->getCode(), 'message' => $exception->getMessage()]);
+        }
+
+        return FALSE;
+    }
+
+    /**
+     * Return Confirmation Count By Transaction Hash In Dogecoin Chain.
+     *
+     * @return mixed
+     */
+    protected function getConfirmationCountByHashForDogecoin($hash)
+    {
+        try {
+            try {
+                $client = new Client([
+                    'base_uri' => config('api.dogechain.baseUri') . '/'
+                ]);
+
+                $response = $client->request('GET', implode('/', ['v' . config('api.dogechain.version'), 'transaction', $hash]));
+            } catch (GuzzleException $exception) {
+                Log::critical('TransactionExplorerService Dogecoin Explore Error', ['statusCode' => $exception->getCode(), 'message' => $exception->getMessage()]);
+                $response = NULL;
+            }
+
+            if ($response && $bodyJson = $response->getBody()) {
+                $content = json_decode($bodyJson->getContents());
+
+                return self::convertHexToDecimal($content->transaction->confirmations);
+            }
+        } catch (Exception $exception) {
+            Log::critical('TransactionExplorerService Dogecoin Explore Error', ['statusCode' => $exception->getCode(), 'message' => $exception->getMessage()]);
         }
 
         return FALSE;

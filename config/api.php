@@ -41,4 +41,13 @@ return [
         'baseUri' => 'https://api.xrpscan.com/api',
         'version' => env('XRPSCAN_API_VERSION', '1'),
     ],
+
+    'dogechain' => [
+        'baseUri' => 'https://dogechain.info/api',
+        'version' => env('DOGECHAIN_API_VERSION', '1'),
+    ],
+
+    'blockchair' => [
+        'baseUri' => 'https://api.blockchair.com/',
+    ],
 ];
