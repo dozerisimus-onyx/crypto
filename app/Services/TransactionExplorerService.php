@@ -100,22 +100,27 @@ class TransactionExplorerService
     {
         try {
             switch ($this->chain) {
+
                 case 'ethereum':
                 case 'zcash':
                 case 'bitcoin':
                 case 'ripple':
+                case 'cardano':
                     if (is_null($this->blockNumber)) {
                         $this->blockNumber = self::getBlockNumberByHash();
                     }
                     $latestBlockNumber = self::getNumberOfTheLastBlock();
                     return $latestBlockNumber - $this->blockNumber;
+
                 case 'litecoin':
                 case 'bitcoin-cash':
                 case 'tezos':
                 case 'dogecoin':
                     return self::getConfirmationCountByHash();
+
                 default:
                     Log::critical('TransactionExplorerService Error', ['message' => 'Unsupported Chain : "' . $this->chain . '"']);
+
             }
         } catch (Exception $exception) {
             Log::critical('TransactionExplorerService Error', ['statusCode' => $exception->getCode(), 'message' => $exception->getMessage()]);
@@ -178,6 +183,8 @@ class TransactionExplorerService
                     return self::getNumberOfTheLastBlockForBitcoin();
                 case 'ripple':
                     return self::getNumberOfTheLastBlockForRipple();
+                case 'cardano':
+                    return self::getNumberOfTheLastBlockForCardano();
                 default:
                     Log::critical('TransactionExplorerService Error', ['message' => 'Unsupported Chain : "' . $this->chain . '"']);
             }
@@ -242,7 +249,7 @@ class TransactionExplorerService
                 $response = $client->request('GET', 'latestblock');
 
             } catch (GuzzleException $exception) {
-                Log::critical('TransactionExplorerService Ethereum Explore Error', ['statusCode' => $exception->getCode(), 'message' => $exception->getMessage()]);
+                Log::critical('TransactionExplorerService Bitcoin Explore Error', ['statusCode' => $exception->getCode(), 'message' => $exception->getMessage()]);
                 $response = NULL;
             }
 
@@ -252,7 +259,7 @@ class TransactionExplorerService
                 return self::convertHexToDecimal($content->height + 1);
             }
         } catch (Exception $exception) {
-            Log::critical('TransactionExplorerService Ethereum Explore Error', ['statusCode' => $exception->getCode(), 'message' => $exception->getMessage()]);
+            Log::critical('TransactionExplorerService Bitcoin Explore Error', ['statusCode' => $exception->getCode(), 'message' => $exception->getMessage()]);
         }
 
         return FALSE;
@@ -279,7 +286,7 @@ class TransactionExplorerService
                 ]);
 
             } catch (GuzzleException $exception) {
-                Log::critical('TransactionExplorerService Ethereum Explore Error', ['statusCode' => $exception->getCode(), 'message' => $exception->getMessage()]);
+                Log::critical('TransactionExplorerService Zcash Explore Error', ['statusCode' => $exception->getCode(), 'message' => $exception->getMessage()]);
                 $response = NULL;
             }
 
@@ -289,7 +296,7 @@ class TransactionExplorerService
                 return self::convertHexToDecimal($content->blockNumber);
             }
         } catch (Exception $exception) {
-            Log::critical('TransactionExplorerService Ethereum Explore Error', ['statusCode' => $exception->getCode(), 'message' => $exception->getMessage()]);
+            Log::critical('TransactionExplorerService Zcash Explore Error', ['statusCode' => $exception->getCode(), 'message' => $exception->getMessage()]);
         }
 
         return FALSE;
@@ -315,7 +322,7 @@ class TransactionExplorerService
                 ]);
 
             } catch (GuzzleException $exception) {
-                Log::critical('TransactionExplorerService Ethereum Explore Error', ['statusCode' => $exception->getCode(), 'message' => $exception->getMessage()]);
+                Log::critical('TransactionExplorerService Ripple Explore Error', ['statusCode' => $exception->getCode(), 'message' => $exception->getMessage()]);
                 $response = NULL;
             }
 
@@ -325,7 +332,44 @@ class TransactionExplorerService
                 return self::convertHexToDecimal($content->current_ledger);
             }
         } catch (Exception $exception) {
-            Log::critical('TransactionExplorerService Ethereum Explore Error', ['statusCode' => $exception->getCode(), 'message' => $exception->getMessage()]);
+            Log::critical('TransactionExplorerService Ripple Explore Error', ['statusCode' => $exception->getCode(), 'message' => $exception->getMessage()]);
+        }
+
+        return FALSE;
+    }
+
+    /**
+     * Return Number Of The Last Block In Cardano Chain.
+     *
+     * @return mixed
+     */
+    protected function getNumberOfTheLastBlockForCardano()
+    {
+        try {
+            try {
+                $client = new Client([
+                    'base_uri' => config('api.blockfrost.baseUri') . '/'
+                ]);
+
+                $response = $client->request('GET', implode('/', ['v' . config('api.blockfrost.version'), 'blocks', 'latest']), [
+                    'headers' => [
+                        'Content-Type' => 'application/json',
+                        'project_id' => config('api.blockfrost.projectId'),
+                    ]
+                ]);
+
+            } catch (GuzzleException $exception) {
+                Log::critical('TransactionExplorerService Cardano Explore Error', ['statusCode' => $exception->getCode(), 'message' => $exception->getMessage()]);
+                $response = NULL;
+            }
+
+            if ($response && $bodyJson = $response->getBody()) {
+                $content = json_decode($bodyJson->getContents());
+
+                return self::convertHexToDecimal($content->height);
+            }
+        } catch (Exception $exception) {
+            Log::critical('TransactionExplorerService Cardano Explore Error', ['statusCode' => $exception->getCode(), 'message' => $exception->getMessage()]);
         }
 
         return FALSE;
@@ -348,6 +392,8 @@ class TransactionExplorerService
                     return self::getBlockNumberByHashForBitcoin($this->hash);
                 case 'ripple':
                     return self::getBlockNumberByHashForRipple($this->hash);
+                case 'cardano':
+                    return self::getBlockNumberByHashForCardano($this->hash);
                 default:
                     Log::critical('TransactionExplorerService Error', ['message' => 'Unsupported Chain : "' . $this->chain . '"']);
             }
@@ -465,6 +511,43 @@ class TransactionExplorerService
             }
         } catch (Exception $exception) {
             Log::critical('TransactionExplorerService Ripple Explore Error', ['statusCode' => $exception->getCode(), 'message' => $exception->getMessage()]);
+        }
+
+        return FALSE;
+    }
+
+    /**
+     * Return Block Number By Transaction Hash In Cardano Chain.
+     *
+     * @return mixed
+     */
+    protected function getBlockNumberByHashForCardano($hash)
+    {
+        try {
+            try {
+                $client = new Client([
+                    'base_uri' => config('api.blockfrost.baseUri') . '/'
+                ]);
+
+                $response = $client->request('GET', implode('/', ['v' . config('api.blockfrost.version'), 'txs', $hash]), [
+                    'headers' => [
+                        'Content-Type' => 'application/json',
+                        'project_id' => config('api.blockfrost.projectId'),
+                    ]
+                ]);
+
+            } catch (GuzzleException $exception) {
+                Log::critical('TransactionExplorerService Cardano Explore Error', ['statusCode' => $exception->getCode(), 'message' => $exception->getMessage()]);
+                $response = NULL;
+            }
+
+            if ($response && $bodyJson = $response->getBody()) {
+                $content = json_decode($bodyJson->getContents());
+
+                return self::convertHexToDecimal($content->block_height);
+            }
+        } catch (Exception $exception) {
+            Log::critical('TransactionExplorerService Cardano Explore Error', ['statusCode' => $exception->getCode(), 'message' => $exception->getMessage()]);
         }
 
         return FALSE;

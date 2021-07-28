@@ -50,4 +50,10 @@ return [
     'blockchair' => [
         'baseUri' => 'https://api.blockchair.com/',
     ],
+
+    'blockfrost' => [
+        'baseUri' => 'https://cardano-mainnet.blockfrost.io/api',
+        'version' => env('BLOCKFROST_API_VERSION', '0'),
+        'projectId' => env('PROJECT_ID_KEY'),
+    ],
 ];
